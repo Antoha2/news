@@ -25,16 +25,7 @@ type RepNews struct {
 	Categories []int
 }
 
-type RepNewsFilter struct {
-	// Id          int
-	// Name        string
-	// SurName     string
-	// Patronymic  string
-	// Age         int
-	// Gender      string
-	// Nationality string
-	// Offset      int
-	// Limit       int
+type SearchTerms struct {
+	Offset int
+	Limit  int
 }
-
-

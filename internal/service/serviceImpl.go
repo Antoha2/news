@@ -8,11 +8,16 @@ import (
 )
 
 //get userS
-func (s *ServImpl) GetNews(ctx context.Context) ([]*News, error) {
+func (s *ServImpl) GetNews(ctx context.Context, pNews *SearchTerms) ([]*News, error) {
 
-	repNews, err := s.rep.GetNews(ctx)
+	rNews := &repository.SearchTerms{
+		Limit:  pNews.Limit,
+		Offset: pNews.Offset,
+	}
+
+	repNews, err := s.rep.GetNews(ctx, rNews)
 	if err != nil {
-		return nil, errors.Wrap(err, "occurred error Get News")
+		return nil, errors.Wrap(err, "occurred error GetNews")
 	}
 
 	newsS := make([]*News, len(repNews))
@@ -38,7 +43,7 @@ func (s *ServImpl) AddNews(ctx context.Context, news *News) (*News, error) {
 	}
 	repNews, err := s.rep.AddNews(ctx, repNews)
 	if err != nil {
-		return nil, errors.Wrap(err, "occurred error Add News")
+		return nil, errors.Wrap(err, "occurred error AddNews")
 	}
 
 	respUser := &News{

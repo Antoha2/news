@@ -6,9 +6,11 @@ import (
 )
 
 type Config struct {
-	Env      string `env:"ENV" env-default:"local"`
-	HTTP     HTTPConfig
-	DBConfig DBConfig
+	Env                   string `env:"ENV" env-default:"local"`
+	HTTP                  HTTPConfig
+	DBConfig              DBConfig
+	DefaultPropertyLimit  int `env:"LIMIT" env-default:"100"`
+	DefaultPropertyOffset int `env:"OFFSET" env-default:"0"`
 }
 
 type DBConfig struct {

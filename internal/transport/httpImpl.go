@@ -40,9 +40,23 @@ func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
 	const op = "getNews"
 	log := a.log.With(slog.String("op", op))
 
+	pNews := &service.SearchTerms{
+		Limit:  a.cfg.DefaultPropertyLimit,
+		Offset: a.cfg.DefaultPropertyOffset,
+	}
+
+	if err := c.BodyParser(&pNews); err != nil {
+		log.Error("cant unmarshall", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
+
 	log.Info("run get News")
 
-	news, err := a.service.GetNews(c.Context())
+	news, err := a.service.GetNews(c.Context(), pNews)
 	if err != nil {
 		a.log.Error("occurred error for GetNews", sl.Err(err))
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{

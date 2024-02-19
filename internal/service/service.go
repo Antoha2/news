@@ -9,7 +9,7 @@ import (
 )
 
 type Repository interface {
-	GetNews(ctx context.Context) ([]*repository.RepNews, error)
+	GetNews(ctx context.Context, pNews *repository.SearchTerms) ([]*repository.RepNews, error)
 	AddNews(ctx context.Context, news *repository.RepNews) (int, error)
 	EditNews(ctx context.Context, id int, news *repository.RepNews) (*repository.RepNews, error)
 }
@@ -41,11 +41,7 @@ type News struct {
 	Categories []int  `json:"categories"`
 }
 
-// type EditNewsFilter struct {
-// 	Id         int    `json:"id"`
-// 	Title      string `json:"title"`
-// 	Content    string `json:"content"`
-// 	Categories []int  `json:"categories"`
-// 	Offset     int    `json:"offset"`
-// 	Limit      int    `json:"limit"`
-// }
+type SearchTerms struct {
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
+}

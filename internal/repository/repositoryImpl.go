@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 )
 
 //add user
@@ -16,7 +17,7 @@ func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) 
 	// 	log.Fatal(err)
 	// }
 	//log.Println("rep !!!!!!!!!!!!!!!!!!!!!!!! ", news)
-	//repNews := RepNews{}
+	// repNews := RepNews{}
 
 	// query := "INSERT INTO news (title, content) VALUES ($1, $2) RETURNING id, title, content"
 	// row := r.DB.QueryRowContext(ctx, query, news.Title, news.Content)
@@ -26,7 +27,10 @@ func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) 
 
 	// query = "INSERT INTO NewsCategories (newsId, CategoryId) VALUES ($1, $2)"
 	// for i := 0; i < len(news.Categories); i++ {
-	// 	row,err := r.DB.ExecContext(ctx, query, news.Id, news.Categories[i])
+	// 	_, err := r.DB.ExecContext(ctx, query, news.Id, news.Categories[i])
+	// 	if err != nil {
+	// 		return nil, errors.Wrap(err, fmt.Sprintf("sql add news failed, query: %s", query))
+	// 	}
 	// }
 
 	return news, nil
@@ -38,6 +42,7 @@ func (r *RepImpl) EditNews(ctx context.Context, id int, news *RepNews) (*RepNews
 }
 
 //get News
-func (r *RepImpl) GetNews(ctx context.Context) ([]*RepNews, error) {
+func (r *RepImpl) GetNews(ctx context.Context, pNews *SearchTerms) ([]*RepNews, error) {
+	log.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ", pNews)
 	return nil, nil
 }

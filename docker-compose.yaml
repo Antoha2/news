@@ -6,7 +6,7 @@ services:
     image: golang:1.21.4
     depends_on:
        - postgres
-      #  - migrate
+       - migrate
     environment:
       ENVIRONMENT: development
     volumes:
@@ -35,20 +35,20 @@ services:
       start_period: 5s
       timeout: 60s
    
-  # migrate:
-  #   container_name: migrate
-  #   image: migrate/migrate:v4.17.0
-  #   volumes:
-  #     - ./migrations:/migrations
-  #   entrypoint:
-  #     [
-  #       "migrate",
-  #       "-path",
-  #       "/migrations",
-  #       "-database",
-  #       "postgres://user:password@postgres:5432/postgres?sslmode=disable",
-  #       "up"
-  #     ]
-  #   depends_on:
-  #      - postgres
+  migrate:
+    container_name: migrate
+    image: migrate/migrate:v4.17.0
+    volumes:
+      - ./migrations:/migrations
+    entrypoint:
+      [
+        "migrate",
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://user:password@postgres:5432/newsdb?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+       - postgres
     

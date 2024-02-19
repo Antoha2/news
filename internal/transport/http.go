@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	GetNews(ctx context.Context) ([]*service.News, error)
+	GetNews(ctx context.Context, param *service.SearchTerms) ([]*service.News, error)
 	EditNews(ctx context.Context, id int, news *service.News) (*service.News, error)
 	AddNews(ctx context.Context, news *service.News) (*service.News, error)
 }
