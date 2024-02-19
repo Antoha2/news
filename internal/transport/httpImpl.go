@@ -18,13 +18,12 @@ func (a *apiImpl) StartHTTP() error {
 
 	app.Get("/api/list", a.getNewsHandler)
 	app.Post("/api/:id", a.editNewsHandler)
-	app.Post("/api/add", a.addNewsHandler)
+	app.Post("/add", a.addNewsHandler)
 
 	err := app.Listen(fmt.Sprintf(":%s", a.cfg.HTTP.HostPort))
 	if err != nil {
 		return errors.Wrap(err, "ocurred error StartHTTP")
 	}
-	a.log.Info(fmt.Sprintf("Запуск HTTP-сервера на http://127.0.0.1:%s", a.cfg.HTTP.HostPort))
 	return nil
 }
 
@@ -41,8 +40,8 @@ func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
 	log := a.log.With(slog.String("op", op))
 
 	pNews := &service.SearchTerms{
-		Limit:  a.cfg.DefaultPropertyLimit,
-		Offset: a.cfg.DefaultPropertyOffset,
+		Limit:  a.cfg.DBConfig.DefaultPropertyLimit,
+		Offset: a.cfg.DBConfig.DefaultPropertyOffset,
 	}
 
 	if err := c.BodyParser(&pNews); err != nil {
@@ -132,9 +131,9 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
 
 	log.Info("run add News", sl.Atr("News", news))
 
-	news, err := a.service.AddNews(c.Context(), news)
+	rNews, err := a.service.AddNews(c.Context(), news)
 	if err != nil {
-		a.log.Error("occurred error for GetNews", sl.Err(err))
+		a.log.Error("occurred error for addNews", sl.Err(err))
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 			"success": false,
 			"error":   err,
@@ -144,6 +143,6 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
 
 	c.JSON(&fiber.Map{
 		"success": true,
-		"news":    news,
+		"news_id": rNews.Id,
 	})
 }

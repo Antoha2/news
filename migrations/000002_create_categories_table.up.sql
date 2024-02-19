@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS Categories (
-  categories_id SERIAL PRIMARY KEY,
-  title VARCHAR(255) NOT NULL
-)
+-- CREATE TABLE IF NOT EXISTS Categories (
+--   categories_id SERIAL PRIMARY KEY,
+--   title VARCHAR(255) NOT NULL
+-- )

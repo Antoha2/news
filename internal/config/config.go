@@ -6,20 +6,20 @@ import (
 )
 
 type Config struct {
-	Env                   string `env:"ENV" env-default:"local"`
-	HTTP                  HTTPConfig
-	DBConfig              DBConfig
-	DefaultPropertyLimit  int `env:"LIMIT" env-default:"100"`
-	DefaultPropertyOffset int `env:"OFFSET" env-default:"0"`
+	Env      string `env:"ENV" env-default:"local"`
+	HTTP     HTTPConfig
+	DBConfig DBConfig
 }
 
 type DBConfig struct {
-	User     string `env:"DB_USER" env-default:"user"`
-	Password string `env:"DB_PASSWORD" env-default:"user"`
-	Host     string `env:"DB_HOST" env-default:"localhost"`
-	Port     string `env:"DB_PORT" env-default:"5432"`
-	Dbname   string `env:"DB_DBNAME" env-default:"newsdb"`
-	Sslmode  string `env:"DB_SSLMODE" env-default:"disable"`
+	User                  string `env:"DB_USER" env-default:"user"`
+	Password              string `env:"DB_PASSWORD" env-default:"user"`
+	Host                  string `env:"DB_HOST" env-default:"localhost"`
+	Port                  string `env:"DB_PORT" env-default:"5432"`
+	Dbname                string `env:"DB_DBNAME" env-default:"newsdb"`
+	Sslmode               string `env:"DB_SSLMODE" env-default:"disable"`
+	DefaultPropertyLimit  int    `env:"DB_LIMIT" env-default:"100"`
+	DefaultPropertyOffset int    `env:"DB_OFFSET" env-default:"0"`
 }
 
 type HTTPConfig struct {

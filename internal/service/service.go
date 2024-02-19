@@ -10,7 +10,7 @@ import (
 
 type Repository interface {
 	GetNews(ctx context.Context, pNews *repository.SearchTerms) ([]*repository.RepNews, error)
-	AddNews(ctx context.Context, news *repository.RepNews) (int, error)
+	AddNews(ctx context.Context, news *repository.RepNews) (*repository.RepNews, error)
 	EditNews(ctx context.Context, id int, news *repository.RepNews) (*repository.RepNews, error)
 }
 

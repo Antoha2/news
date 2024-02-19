@@ -30,8 +30,8 @@ func run() {
 	cfg := config.MustLoad()
 	slogger := logger.SetupLogger(cfg.Env)
 	dbx := MustInitDb(cfg)
-	rep := repository.NewRep(slogger, dbx)
 
+	rep := repository.NewRep(slogger, dbx)
 	serv := service.NewServ(cfg, slogger, rep)
 	trans := transport.NewApi(cfg, slogger, serv)
 
