@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 
 	"github.com/Antoha2/news/internal/repository"
 	"github.com/pkg/errors"
@@ -10,37 +9,23 @@ import (
 
 //get userS
 func (s *ServImpl) GetNews(ctx context.Context) ([]*News, error) {
-	return nil, nil
-	// readFilter := &repository.RepQueryFilter{
-	// 	Id:          filter.Id,
-	// 	Name:        filter.Name,
-	// 	SurName:     filter.SurName,
-	// 	Patronymic:  filter.Patronymic,
-	// 	Age:         filter.Age,
-	// 	Gender:      filter.Gender,
-	// 	Nationality: filter.Nationality,
-	// 	Limit:       filter.Limit,
-	// 	Offset:      filter.Offset,
-	// }
-	// repUsers, err := s.rep.GetUsers(ctx, readFilter)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "occurred error GetUsers")
-	// }
 
-	// users := make([]*User, len(repUsers))
-	// for index, user := range repUsers {
-	// 	t := &User{
-	// 		Id:          user.Id,
-	// 		Name:        user.Name,
-	// 		SurName:     user.SurName,
-	// 		Patronymic:  user.Patronymic,
-	// 		Age:         user.Age,
-	// 		Gender:      user.Gender,
-	// 		Nationality: user.Nationality,
-	// 	}
-	// 	users[index] = t
-	// }
-	// return users, nil
+	repNews, err := s.rep.GetNews(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "occurred error Get News")
+	}
+
+	newsS := make([]*News, len(repNews))
+	for index, news := range repNews {
+		t := &News{
+			Id:         news.Id,
+			Title:      news.Title,
+			Content:    news.Content,
+			Categories: news.Categories,
+		}
+		newsS[index] = t
+	}
+	return newsS, nil
 }
 
 //add user
@@ -51,10 +36,9 @@ func (s *ServImpl) AddNews(ctx context.Context, news *News) (*News, error) {
 		Content:    news.Content,
 		Categories: news.Categories,
 	}
-	log.Println("serv !!!!!!!!!!!!!!!!!!!!! ", repNews)
 	repNews, err := s.rep.AddNews(ctx, repNews)
 	if err != nil {
-		return nil, errors.Wrap(err, "occurred error AddNews")
+		return nil, errors.Wrap(err, "occurred error Add News")
 	}
 
 	respUser := &News{
@@ -64,4 +48,28 @@ func (s *ServImpl) AddNews(ctx context.Context, news *News) (*News, error) {
 		Categories: repNews.Categories,
 	}
 	return respUser, nil
+}
+
+//edit News
+func (s *ServImpl) EditNews(ctx context.Context, id int, news *News) (*News, error) {
+
+	reposNews := &repository.RepNews{
+		Id:         news.Id,
+		Title:      news.Title,
+		Content:    news.Content,
+		Categories: news.Categories,
+	}
+
+	reposNews, err := s.rep.EditNews(ctx, id, reposNews)
+	if err != nil {
+		return nil, errors.Wrap(err, "occurred error edit News")
+	}
+	respNews := &News{
+		Id:         reposNews.Id,
+		Title:      reposNews.Title,
+		Content:    reposNews.Content,
+		Categories: reposNews.Categories,
+	}
+
+	return respNews, nil
 }

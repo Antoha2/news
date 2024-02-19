@@ -37,10 +37,4 @@ type RepNewsFilter struct {
 	// Limit       int
 }
 
-//reform:people
-type DBNews struct {
-	Id         int    `reform:"id,pk"`
-	Title      string `reform:"citle"`
-	Content    string `reform:"content"`
-	Categories []int
-}
+

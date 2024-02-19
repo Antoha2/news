@@ -10,10 +10,10 @@ CREATE TABLE News (
 -- Структура таблицы `NewsCategories`
 --
 
-CREATE TABLE `NewsCategories` (
-  `NewsId` bigint NOT NULL,
-  `CategoryId` bigint NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE NewsCategories (
+  NewsId BIGINT NOT NULL,
+  CategoryId BIGINT NOT NULL
+)
 
 --
 -- Индексы сохранённых таблиц
@@ -22,14 +22,14 @@ CREATE TABLE `NewsCategories` (
 --
 -- Индексы таблицы `News`
 --
-ALTER TABLE `News`
-  ADD PRIMARY KEY (`Id`);
+ALTER TABLE News
+  ADD PRIMARY KEY (Id);
 
 --
 -- Индексы таблицы `NewsCategories`
 --
-ALTER TABLE `NewsCategories`
-  ADD PRIMARY KEY (`NewsId`,`CategoryId`);
+ALTER TABLE NewsCategories
+  ADD PRIMARY KEY (NewsId,CategoryId);
 
 --
 -- AUTO_INCREMENT для сохранённых таблиц
@@ -38,5 +38,5 @@ ALTER TABLE `NewsCategories`
 --
 -- AUTO_INCREMENT для таблицы `News`
 --
-ALTER TABLE `News`
-  MODIFY `Id` bigint NOT NULL AUTO_INCREMENT;
+ALTER TABLE News
+  MODIFY Id BIGINT NOT NULL AUTO_INCREMENT;

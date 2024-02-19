@@ -2,20 +2,19 @@ package repository
 
 import (
 	"context"
-	"log"
 )
 
 //add user
 func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) {
 
 	//r.DB.Save(news)
-	dbNews := &DBNews{
-		Title:   news.Title,
-		Content: news.Content,
-	}
-	if err := r.DB.Save(dbNews); err != nil {
-		log.Fatal(err)
-	}
+	// dbNews := &DBNews{
+	// 	Title:   news.Title,
+	// 	Content: news.Content,
+	// }
+	// if err := r.DB.Save(dbNews); err != nil {
+	// 	log.Fatal(err)
+	// }
 	//log.Println("rep !!!!!!!!!!!!!!!!!!!!!!!! ", news)
 	//repNews := RepNews{}
 
@@ -31,4 +30,14 @@ func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) 
 	// }
 
 	return news, nil
+}
+
+//edit News
+func (r *RepImpl) EditNews(ctx context.Context, id int, news *RepNews) (*RepNews, error) {
+	return news, nil
+}
+
+//get News
+func (r *RepImpl) GetNews(ctx context.Context) ([]*RepNews, error) {
+	return nil, nil
 }

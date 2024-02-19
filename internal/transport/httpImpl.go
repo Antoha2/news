@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/Antoha2/news/internal/service"
 	"github.com/Antoha2/news/pkg/logger/sl"
@@ -15,9 +16,9 @@ import (
 func (a *apiImpl) StartHTTP() error {
 	app := fiber.New()
 
-	app.Get("/api/getNews", a.getNewsHandler)
-	app.Post("/", a.editNewsHandler)
-	app.Post("/api/addNews", a.addNewsHandler)
+	app.Get("/api/list", a.getNewsHandler)
+	app.Post("/api/:id", a.editNewsHandler)
+	app.Post("/api/add", a.addNewsHandler)
 
 	err := app.Listen(fmt.Sprintf(":%s", a.cfg.HTTP.HostPort))
 	if err != nil {
@@ -33,6 +34,7 @@ func (a *apiImpl) Stop() {
 	}
 }
 
+//get News
 func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
 
 	const op = "getNews"
@@ -43,64 +45,91 @@ func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
 	news, err := a.service.GetNews(c.Context())
 	if err != nil {
 		a.log.Error("occurred error for GetNews", sl.Err(err))
-		c.Status(http.StatusInternalServerError).JSON(err.Error())
-		return
-	}
-
-	if err != nil || len(news) == 0 {
-		c.Status(404).JSON(&fiber.Map{
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 			"success": false,
-			"error":   "There are no posts!",
+			"error":   err,
 		})
 		return
 	}
 	c.JSON(&fiber.Map{
 		"success": true,
-		"posts":   news,
+		"news":    news,
 	})
 }
 
+//edit News
 func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 
-	// const op = "getUser"
-	// log := a.log.With(slog.String("op", op))
-
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!")
-}
-
-//add News
-func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
-	const op = "addNews"
+	const op = "edit News"
 	log := a.log.With(slog.String("op", op))
 
-	log.Info("run get News")
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		log.Error("cant convert param", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
 
 	news := &service.News{}
 	if err := c.BodyParser(&news); err != nil {
 		log.Error("cant unmarshall", sl.Err(err))
-		c.Status(http.StatusBadRequest).JSON(err.Error())
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
 		return
 	}
-	fmt.Print(news)
+
+	log.Info("run edit News", sl.Atr("News", news))
+
+	news, err = a.service.EditNews(c.Context(), id, news)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
+	c.JSON(&fiber.Map{
+		"success": true,
+		"news":    news,
+	})
+}
+
+//add News
+func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
+	const op = "add News"
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("run add News")
+
+	news := &service.News{}
+	if err := c.BodyParser(&news); err != nil {
+		log.Error("cant unmarshall", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
 
 	log.Info("run add News", sl.Atr("News", news))
 
 	news, err := a.service.AddNews(c.Context(), news)
 	if err != nil {
 		a.log.Error("occurred error for GetNews", sl.Err(err))
-		c.Status(http.StatusInternalServerError).JSON(err.Error())
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
 		return
 	}
 
-	// if err != nil || len(news) == 0 {
-	// 	c.Status(404).JSON(&fiber.Map{
-	// 		"success": false,
-	// 		"error":   "There are no posts!",
-	// 	})
-	// 	return
-	// }
-	// c.JSON(&fiber.Map{
-	// 	"success": true,
-	// 	"posts":   news,
-	// })
+	c.JSON(&fiber.Map{
+		"success": true,
+		"news":    news,
+	})
 }
