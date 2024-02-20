@@ -3,6 +3,7 @@ package repository
 import (
 	"log/slog"
 
+	"github.com/pkg/errors"
 	"gopkg.in/reform.v1"
 )
 
@@ -29,3 +30,9 @@ type SearchTerms struct {
 	Offset int
 	Limit  int
 }
+
+var (
+	ErrUserExists   = errors.New("user already exists")
+	ErrUserNotFound = errors.New("user not found")
+	ErrAppNotFound  = errors.New("app not found")
+)

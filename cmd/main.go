@@ -9,9 +9,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	authRepository "github.com/Antoha2/news/internal/auth/internal/repository"
-	authService "github.com/Antoha2/news/internal/auth/internal/services"
-	authTransport "github.com/Antoha2/news/internal/auth/internal/transport/http"
 	"github.com/Antoha2/news/internal/config"
 	"github.com/Antoha2/news/internal/repository"
 	"github.com/Antoha2/news/internal/service"
@@ -36,11 +33,10 @@ func run() {
 
 	rep := repository.NewRep(slogger, dbx)
 	serv := service.NewServ(cfg, slogger, rep)
-	trans := transport.NewApi(cfg, slogger, serv)
+	authServ := service.NewServAuth(cfg, slogger, rep)
+	trans := transport.NewApi(cfg, slogger, serv, authServ)
 
-	authRep := authRepository.NewRepAuth(slogger, dbx, cfg.TokenTTL)
-	authServ := authService.NewServAuth(slogger, authRep)
-	authTrans := authTransport.NewApi(authServ, slogger, cfg.HTTP.HostAddr)
+	// a := authRepository.NewRep()
 
 	go trans.StartHTTP()
 

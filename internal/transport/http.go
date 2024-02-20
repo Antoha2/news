@@ -15,18 +15,33 @@ type Service interface {
 	AddNews(ctx context.Context, news *service.News) (*service.News, error)
 }
 
+type AuthService interface {
+	Login(ctx context.Context, email string, password string, appID int) (token string, err error)
+	RegisterNewUser(ctx context.Context, email string, password string) (userID int64, err error)
+}
+
 type apiImpl struct {
-	service Service
-	cfg     *config.Config
-	log     *slog.Logger
-	server  *http.Server
+	authService AuthService
+	service     Service
+	cfg         *config.Config
+	log         *slog.Logger
+	server      *http.Server
 }
 
 // NewAPI
-func NewApi(cfg *config.Config, log *slog.Logger, service Service) *apiImpl {
+func NewApi(cfg *config.Config, log *slog.Logger, service Service, authService AuthService) *apiImpl {
 	return &apiImpl{
-		service: service,
-		log:     log,
-		cfg:     cfg,
+		authService: authService,
+		service:     service,
+		log:         log,
+		cfg:         cfg,
 	}
+}
+
+type ServRegUser struct {
+	FirstName string
+	LastName  string
+	Username  string
+	Password  string
+	Email     string
 }

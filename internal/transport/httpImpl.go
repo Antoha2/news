@@ -17,6 +17,9 @@ import (
 func (a *apiImpl) StartHTTP() error {
 	app := fiber.New()
 
+	app.Post("/auth/login", a.loginHandler)
+	app.Post("/auth/register", a.registerHandler)
+
 	app.Get("/api/list", a.getNewsHandler)
 	app.Post("/api/add", a.addNewsHandler)
 	app.Post("/api/:id", a.editNewsHandler)
@@ -158,6 +161,7 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
 	})
 }
 
+//request Validation
 func requestValidation(n *service.News) error {
 
 	if n.Id == 0 && n.Title == "" && n.Content == "" && len(n.Categories) == 0 {
@@ -180,4 +184,63 @@ func requestValidation(n *service.News) error {
 	}
 
 	return nil
+}
+
+//-----------------------------------------------------------------------------------
+
+func (a *apiImpl) loginHandler(c *fiber.Ctx) {
+	const op = "login user"
+	log := a.log.With(slog.String("op", op))
+	log.Info("run login user")
+
+	req := &service.LoginRequest{}
+
+	if err := c.BodyParser(&req); err != nil {
+		log.Error("cant unmarshall", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
+
+	token, err := a.authService.Login(c.Context(), req.Username, req.Password, 0)
+	if err != nil {
+		a.log.Error("occurred error for Login user", sl.Err(err))
+		c.Status(http.StatusInternalServerError).JSON(&fiber.ErrInternalServerError)
+	}
+	c.JSON(&fiber.Map{
+		"success": true,
+		"token":   token,
+	})
+
+}
+
+func (a *apiImpl) registerHandler(c *fiber.Ctx) {
+	const op = "register user"
+	log := a.log.With(slog.String("op", op))
+
+	req := &service.RegisterRequest{}
+
+	if err := c.BodyParser(&req); err != nil {
+		log.Error("cant unmarshall", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
+
+	fmt.Println(req)
+
+	log.Info("run register user")
+	userId, err := a.authService.RegisterNewUser(c.Context(), req.Email, req.Password)
+	if err != nil {
+		a.log.Error("occurred error for register user", sl.Err(err))
+		c.Status(http.StatusInternalServerError).JSON(&fiber.ErrInternalServerError)
+	}
+	c.JSON(&fiber.Map{
+		"success": true,
+		"userId":  userId,
+	})
 }
