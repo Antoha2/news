@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/Antoha2/news/internal/service"
 	"github.com/Antoha2/news/pkg/logger/sl"
@@ -78,7 +79,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		log.Error("cant convert param", sl.Err(err))
+		log.Error("wrong format id", sl.Err(err))
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"success": false,
 			"error":   err,
@@ -96,10 +97,20 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 		return
 	}
 
+	if err = requestValidation(news); err != nil {
+		log.Error("occurred error for edit News, ", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return
+	}
+
 	log.Info("run edit News", sl.Atr("News", news))
 
 	news, err = a.service.EditNews(c.Context(), id, news)
 	if err != nil {
+		log.Error("occurred error for edit News, ", sl.Err(err))
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 			"success": false,
 			"error":   err,
@@ -145,4 +156,28 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
 		"success": true,
 		"news_id": rNews.Id,
 	})
+}
+
+func requestValidation(n *service.News) error {
+
+	if n.Id == 0 && n.Title == "" && n.Content == "" && len(n.Categories) == 0 {
+		return errors.New("empty request")
+	}
+
+	vErr := make([]string, 0, 4)
+	if len(n.Title) >= 255 {
+		vErr = append(vErr, "long length Title")
+	}
+	if len(n.Content) > 1000 {
+		vErr = append(vErr, "long length Content")
+	}
+	if len(n.Categories) > 10 {
+		vErr = append(vErr, "too mush Categories")
+	}
+
+	if len(vErr) != 0 {
+		return errors.New(strings.Join(vErr, ", "))
+	}
+
+	return nil
 }

@@ -39,7 +39,7 @@ func (s *ServImpl) AddNews(ctx context.Context, news *News) (*News, error) {
 	repNews := &repository.RepNews{
 		Title:      news.Title,
 		Content:    news.Content,
-		Categories: news.Categories,
+		Categories: validationCategories(news.Categories),
 	}
 	repNews, err := s.rep.AddNews(ctx, repNews)
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *ServImpl) EditNews(ctx context.Context, id int, news *News) (*News, err
 		Id:         news.Id,
 		Title:      news.Title,
 		Content:    news.Content,
-		Categories: news.Categories,
+		Categories: validationCategories(news.Categories),
 	}
 
 	reposNews, err := s.rep.EditNews(ctx, id, reposNews)
@@ -77,4 +77,19 @@ func (s *ServImpl) EditNews(ctx context.Context, id int, news *News) (*News, err
 	}
 
 	return respNews, nil
+}
+
+//remove duplicate values Categories
+func validationCategories(n []int) []int {
+
+	m := map[int]int{}
+	s := make([]int, 0)
+
+	for i := 0; i < len(n); i++ {
+		m[n[i]]++
+		if m[n[i]] < 2 {
+			s = append(s, n[i])
+		}
+	}
+	return s
 }

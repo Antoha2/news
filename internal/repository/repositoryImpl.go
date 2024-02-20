@@ -12,7 +12,6 @@ import (
 func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) {
 
 	repNews := &RepNews{}
-	repNews.Categories = news.Categories
 
 	query := "INSERT INTO news (title, content) VALUES ($1, $2) RETURNING id, title, content"
 	row := r.DB.QueryRowContext(ctx, query, news.Title, news.Content)
@@ -25,7 +24,7 @@ func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) 
 	query = fmt.Sprintf("INSERT INTO news_categories(news_Id, categories_id) VALUES%s", queryConstrain)
 	_, err := r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
-		return news, errors.Wrap(err, fmt.Sprintf("sql add News failed, query: %s", query))
+		return nil, errors.Wrap(err, fmt.Sprintf("sql add News failed, query: %s", query))
 	}
 	repNews.Categories = news.Categories
 	return repNews, nil
@@ -34,22 +33,39 @@ func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) 
 //edit News
 func (r *RepImpl) EditNews(ctx context.Context, id int, news *RepNews) (*RepNews, error) {
 
-	repNews := &RepNews{}
+	stmtCount, err := r.DB.QueryContext(ctx, "SELECT COUNT(id) FROM news WHERE id = $1", id)
+	if err != nil {
+		return nil, errors.Wrap(err, "sql edit News failed ")
+	}
+
+	count := 0
+
+	for stmtCount.Next() {
+		err := stmtCount.Scan(&count)
+		if err != nil {
+			return nil, errors.Wrap(err, "sql edit News failed")
+		}
+	}
+
+	if count == 0 {
+		return nil, errors.New("sql edit News failed, no such ID exists")
+	}
 
 	tx, err := r.DB.Begin()
 	if err != nil {
-		return news, errors.Wrap(err, "sql edit News failed ")
+		return nil, errors.Wrap(err, "sql edit News failed ")
 	}
 
 	query := "DELETE FROM news_categories WHERE news_id = $1"
 	_, err = tx.ExecContext(ctx, query, id)
 	if err != nil {
 		tx.Rollback()
-		return news, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
+		return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 	}
 
 	queryConstrain, args := buildEditQueryConstrain(news, id)
 
+	repNews := &RepNews{}
 	query = fmt.Sprintf("UPDATE news SET%s RETURNING id, title, content", queryConstrain)
 	row := tx.QueryRowContext(ctx, query, args...)
 	if err := row.Scan(&repNews.Id, &repNews.Title, &repNews.Content); err != nil {
@@ -64,12 +80,12 @@ func (r *RepImpl) EditNews(ctx context.Context, id int, news *RepNews) (*RepNews
 	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		tx.Rollback()
-		return news, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
+		return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return news, errors.Wrap(err, "sql edit News failed")
+		return nil, errors.Wrap(err, "sql edit News failed")
 	}
 	return repNews, nil
 
@@ -102,7 +118,7 @@ func (r *RepImpl) GetNews(ctx context.Context, pNews *SearchTerms) ([]*RepNews, 
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("sql get News failed, query: %s", query))
 		}
-		cat := make([]int, 0)
+		categories := make([]int, 0)
 		for rows.Next() {
 			category := 0
 
@@ -110,9 +126,9 @@ func (r *RepImpl) GetNews(ctx context.Context, pNews *SearchTerms) ([]*RepNews, 
 			if err != nil {
 				return nil, errors.Wrap(err, "sql get News failed")
 			}
-			cat = append(cat, category)
+			categories = append(categories, category)
 		}
-		rNews[i].Categories = cat
+		rNews[i].Categories = categories
 	}
 
 	return rNews, nil
