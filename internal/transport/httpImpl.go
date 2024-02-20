@@ -17,8 +17,8 @@ func (a *apiImpl) StartHTTP() error {
 	app := fiber.New()
 
 	app.Get("/api/list", a.getNewsHandler)
+	app.Post("/api/add", a.addNewsHandler)
 	app.Post("/api/:id", a.editNewsHandler)
-	app.Post("/add", a.addNewsHandler)
 
 	err := app.Listen(fmt.Sprintf(":%s", a.cfg.HTTP.HostPort))
 	if err != nil {
