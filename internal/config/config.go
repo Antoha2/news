@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 )
@@ -9,6 +11,7 @@ type Config struct {
 	Env      string `env:"ENV" env-default:"local"`
 	HTTP     HTTPConfig
 	DBConfig DBConfig
+	TokenTTL time.Duration `env:"TOKEN_TTL" env-default:"1h"`
 }
 
 type DBConfig struct {

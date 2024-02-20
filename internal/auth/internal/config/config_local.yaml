@@ -1,0 +1,14 @@
+env: "local"  
+storage_path: "./storage/sso.db"  
+grpc:  
+  grpcport: 8181
+  grpctimeout: 10h
+http:
+  httpport: 8180
+postgres:
+  dbname: "auth"
+  dbuser: "user"
+  dbpassword: "user"
+  dbhost: "postgres" #postgres localhost
+  dbport: 5432
+  dbsslmode: "disable"
