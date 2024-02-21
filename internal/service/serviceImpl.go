@@ -56,7 +56,7 @@ func (s *ServImpl) AddNews(ctx context.Context, news *News) (*News, error) {
 }
 
 //edit News
-func (s *ServImpl) EditNews(ctx context.Context, id int, news *News) (*News, error) {
+func (s *ServImpl) EditNews(ctx context.Context, news *News) (*News, error) {
 
 	reposNews := &repository.RepNews{
 		Id:         news.Id,
@@ -65,7 +65,7 @@ func (s *ServImpl) EditNews(ctx context.Context, id int, news *News) (*News, err
 		Categories: validationCategories(news.Categories),
 	}
 
-	reposNews, err := s.rep.EditNews(ctx, id, reposNews)
+	reposNews, err := s.rep.EditNews(ctx, reposNews)
 	if err != nil {
 		return nil, errors.Wrap(err, "occurred error edit News")
 	}

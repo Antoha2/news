@@ -23,9 +23,9 @@ func (a *apiImpl) StartHTTP() error {
 
 	app.Use("/api", adaptor.HTTPMiddleware(a.userIdentify))
 
-	app.Get("/api/list", a.getNewsHandler)
-	app.Post("/api/add", a.addNewsHandler)
-	app.Post("/api/:id", a.editNewsHandler)
+	app.Get("/news", a.getNewsHandler)
+	app.Post("/news", a.addNewsHandler)
+	app.Put("/news/:id", a.editNewsHandler)
 
 	err := app.Listen(fmt.Sprintf(":%s", a.cfg.HTTP.HostPort))
 	if err != nil {
@@ -103,7 +103,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) error {
 		})
 		return err
 	}
-
+	news.Id = id
 	if err = requestValidation(news); err != nil {
 		log.Error("occurred error for edit News, ", sl.Err(err))
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -115,7 +115,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) error {
 
 	log.Info("run edit News", sl.Atr("News", news))
 
-	news, err = a.service.EditNews(c.Context(), id, news)
+	news, err = a.service.EditNews(c.Context(), news)
 	if err != nil {
 		log.Error("occurred error for edit News, ", sl.Err(err))
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
@@ -170,7 +170,7 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) error {
 //request Validation
 func requestValidation(n *service.News) error {
 
-	if n.Id == 0 && n.Title == "" && n.Content == "" && len(n.Categories) == 0 {
+	if n.Title == "" && n.Content == "" && len(n.Categories) == 0 {
 		return errors.New("empty request")
 	}
 

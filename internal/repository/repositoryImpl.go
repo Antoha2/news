@@ -11,41 +11,35 @@ import (
 //add user
 func (r *RepImpl) AddNews(ctx context.Context, news *RepNews) (*RepNews, error) {
 
-	repNews := &RepNews{}
+	rNews := &RepNews{}
 
 	query := "INSERT INTO news (title, content) VALUES ($1, $2) RETURNING id, title, content"
 	row := r.DB.QueryRowContext(ctx, query, news.Title, news.Content)
-	if err := row.Scan(&repNews.Id, &repNews.Title, &repNews.Content); err != nil {
+	if err := row.Scan(&rNews.Id, &rNews.Title, &rNews.Content); err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("sql add News failed, query: %s", query))
 	}
 
-	repNews.Categories = news.Categories
-	queryConstrain, args := buildAddQueryConstrain(repNews)
+	rNews.Categories = news.Categories
+	queryConstrain, args := buildAddQueryConstrain(rNews)
 
 	query = fmt.Sprintf("INSERT INTO news_categories(news_Id, categories_id) VALUES%s", queryConstrain)
 	_, err := r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("sql add News failed, query: %s", query))
 	}
-	repNews.Categories = news.Categories
-	return repNews, nil
+	rNews.Categories = news.Categories
+	return rNews, nil
 }
 
 //edit News
-func (r *RepImpl) EditNews(ctx context.Context, id int, news *RepNews) (*RepNews, error) {
+func (r *RepImpl) EditNews(ctx context.Context, news *RepNews) (*RepNews, error) {
 
 	count := 0
 
-	if err := r.DB.QueryRowContext(ctx, "SELECT COUNT(id) FROM news WHERE id = $1", id).Scan(&count); err != nil {
-		return nil, errors.New("sql edit News failed")
-	}
-	if count == 0 {
-		return nil, errors.New("sql edit News failed, no such ID exists")
-	}
 	if err := r.DB.QueryRowContext(ctx, "SELECT COUNT(id) FROM news WHERE id = $1", news.Id).Scan(&count); err != nil {
 		return nil, errors.New("sql edit News failed")
 	}
-	if count != 0 {
+	if count == 0 {
 		return nil, errors.New("sql edit News failed, no such ID exists")
 	}
 
@@ -54,54 +48,72 @@ func (r *RepImpl) EditNews(ctx context.Context, id int, news *RepNews) (*RepNews
 		return nil, errors.Wrap(err, "sql edit News failed ")
 	}
 
-	query := "DELETE FROM news_categories WHERE news_id = $1"
-	_, err = tx.ExecContext(ctx, query, id)
-	if err != nil {
-		tx.Rollback()
-		return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
+	rNews := &RepNews{
+		Id:         news.Id,
+		Categories: news.Categories,
 	}
 
-	repNews := &RepNews{}
-	repNews.Categories = news.Categories
-
-	if news.Id != 0 || news.Title != "" || news.Content != "" {
-		queryConstrain, args := buildEditQueryConstrain(news, id)
-		query = fmt.Sprintf("UPDATE news SET%s RETURNING id, title, content", queryConstrain)
+	if news.Title != "" || news.Content != "" {
+		queryConstrain, args := buildEditQueryConstrain(news)
+		query := fmt.Sprintf("UPDATE news SET%s WHERE id=%d RETURNING id, title, content", queryConstrain, news.Id)
 		row := tx.QueryRowContext(ctx, query, args...)
-		if err := row.Scan(&repNews.Id, &repNews.Title, &repNews.Content); err != nil {
+		if err := row.Scan(&rNews.Id, &rNews.Title, &rNews.Content); err != nil {
 			tx.Rollback()
 			return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 		}
 	} else {
-		query = "SELECT id, title, content FROM news WHERE id = $1"
-		row := tx.QueryRowContext(ctx, query, id)
-		if err := row.Scan(&repNews.Id, &repNews.Title, &repNews.Content); err != nil {
+		query := "SELECT title, content FROM news WHERE id = $1"
+		row := tx.QueryRowContext(ctx, query, news.Id)
+		if err := row.Scan(&rNews.Title, &rNews.Content); err != nil {
+			tx.Rollback()
+			return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
+
+		}
+	}
+
+	if len(rNews.Categories) != 0 {
+
+		query := "DELETE FROM news_categories WHERE news_id = $1"
+		_, err = tx.ExecContext(ctx, query, news.Id)
+		if err != nil {
 			tx.Rollback()
 			return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 		}
 
-	}
-
-	if news.Id == 0 {
-		news.Id = id
-	}
-
-	if len(repNews.Categories) != 0 {
-		queryConstrain, args := buildAddQueryConstrain(repNews)
+		queryConstrain, args := buildAddQueryConstrain(rNews)
 		query = fmt.Sprintf("INSERT INTO news_categories(news_Id, categories_id) VALUES%s", queryConstrain)
 		_, err = r.DB.ExecContext(ctx, query, args...)
 		if err != nil {
 			tx.Rollback()
 			return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 		}
+	} else {
+
+		query := "SELECT categories_id FROM news_categories WHERE news_id=$1"
+		rows, err := r.DB.QueryContext(ctx, query, rNews.Id)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("sql get News failed, query: %s", query))
+		}
+		categories := make([]int, 0)
+		for rows.Next() {
+			category := 0
+
+			err := rows.Scan(&category)
+			if err != nil {
+				return nil, errors.Wrap(err, "sql get News failed")
+			}
+			categories = append(categories, category)
+		}
+		rNews.Categories = categories
 	}
+
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
 		return nil, errors.Wrap(err, "sql edit News failed")
 	}
 
-	return repNews, nil
+	return rNews, nil
 
 }
 
@@ -149,17 +161,17 @@ func (r *RepImpl) GetNews(ctx context.Context, pNews *SearchTerms) ([]*RepNews, 
 }
 
 //build add query string
-func buildAddQueryConstrain(repNews *RepNews) (string, []any) {
+func buildAddQueryConstrain(rNews *RepNews) (string, []any) {
 
-	constrains := make([]string, 0, len(repNews.Categories))
-	args := make([]any, 0, len(repNews.Categories))
+	constrains := make([]string, 0, len(rNews.Categories))
+	args := make([]any, 0, len(rNews.Categories))
 
 	y := 1
-	for i := 0; i < len(repNews.Categories); i++ {
+	for i := 0; i < len(rNews.Categories); i++ {
 		constrains = append(constrains, fmt.Sprintf("($%d, $%d)", y, y+1))
 
-		args = append(args, repNews.Id)
-		args = append(args, repNews.Categories[i])
+		args = append(args, rNews.Id)
+		args = append(args, rNews.Categories[i])
 
 		y += 2
 	}
@@ -169,36 +181,28 @@ func buildAddQueryConstrain(repNews *RepNews) (string, []any) {
 }
 
 //build edit query string
-func buildEditQueryConstrain(repNews *RepNews, id int) (string, []any) {
+func buildEditQueryConstrain(rNews *RepNews) (string, []any) {
 
 	i := 1
 	constrains := make([]string, 0, 3)
 	args := make([]any, 0, 3)
 
-	if repNews.Id != 0 {
-		s := fmt.Sprintf("id=$%d", i)
-		i++
-
-		constrains = append(constrains, s)
-		args = append(args, repNews.Id)
-	}
-	if repNews.Title != "" {
+	if rNews.Title != "" {
 		s := fmt.Sprintf("title=$%d", i)
 		i++
 
 		constrains = append(constrains, s)
-		args = append(args, repNews.Title)
+		args = append(args, rNews.Title)
 	}
-	if repNews.Content != "" {
+	if rNews.Content != "" {
 		s := fmt.Sprintf("content=$%d", i)
 		i++
 
 		constrains = append(constrains, s)
-		args = append(args, repNews.Content)
+		args = append(args, rNews.Content)
 	}
 
-	queryConstrain := fmt.Sprintf(" %s WHERE id=$%d", strings.Join(constrains, ", "), i)
-	args = append(args, id)
+	queryConstrain := fmt.Sprintf(" %s", strings.Join(constrains, ", "))
 
 	return queryConstrain, args
 }
