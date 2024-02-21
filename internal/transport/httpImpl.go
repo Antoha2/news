@@ -10,7 +10,8 @@ import (
 
 	"github.com/Antoha2/news/internal/service"
 	"github.com/Antoha2/news/pkg/logger/sl"
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +20,8 @@ func (a *apiImpl) StartHTTP() error {
 
 	app.Post("/auth/login", a.loginHandler)
 	app.Post("/auth/register", a.registerHandler)
+
+	app.Use("/api", adaptor.HTTPMiddleware(a.userIdentify))
 
 	app.Get("/api/list", a.getNewsHandler)
 	app.Post("/api/add", a.addNewsHandler)
@@ -38,7 +41,7 @@ func (a *apiImpl) Stop() {
 }
 
 //get News
-func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
+func (a *apiImpl) getNewsHandler(c *fiber.Ctx) error {
 
 	const op = "getNews"
 	log := a.log.With(slog.String("op", op))
@@ -54,7 +57,7 @@ func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	log.Info("run get News")
@@ -66,16 +69,17 @@ func (a *apiImpl) getNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 	c.JSON(&fiber.Map{
 		"success": true,
 		"news":    news,
 	})
+	return nil
 }
 
 //edit News
-func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
+func (a *apiImpl) editNewsHandler(c *fiber.Ctx) error {
 
 	const op = "edit News"
 	log := a.log.With(slog.String("op", op))
@@ -87,7 +91,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	news := &service.News{}
@@ -97,7 +101,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	if err = requestValidation(news); err != nil {
@@ -106,7 +110,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	log.Info("run edit News", sl.Atr("News", news))
@@ -118,16 +122,17 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 	c.JSON(&fiber.Map{
 		"success": true,
 		"news":    news,
 	})
+	return nil
 }
 
 //add News
-func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
+func (a *apiImpl) addNewsHandler(c *fiber.Ctx) error {
 	const op = "add News"
 	log := a.log.With(slog.String("op", op))
 
@@ -140,7 +145,7 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	log.Info("run add News", sl.Atr("News", news))
@@ -152,13 +157,14 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	c.JSON(&fiber.Map{
 		"success": true,
 		"news_id": rNews.Id,
 	})
+	return nil
 }
 
 //request Validation
@@ -188,7 +194,7 @@ func requestValidation(n *service.News) error {
 
 //-----------------------------------------------------------------------------------
 
-func (a *apiImpl) loginHandler(c *fiber.Ctx) {
+func (a *apiImpl) loginHandler(c *fiber.Ctx) error {
 	const op = "login user"
 	log := a.log.With(slog.String("op", op))
 	log.Info("run login user")
@@ -201,7 +207,7 @@ func (a *apiImpl) loginHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	token, err := a.authService.Login(c.Context(), req.Username, req.Password, 0)
@@ -213,10 +219,11 @@ func (a *apiImpl) loginHandler(c *fiber.Ctx) {
 		"success": true,
 		"token":   token,
 	})
+	return nil
 
 }
 
-func (a *apiImpl) registerHandler(c *fiber.Ctx) {
+func (a *apiImpl) registerHandler(c *fiber.Ctx) error {
 	const op = "register user"
 	log := a.log.With(slog.String("op", op))
 
@@ -228,7 +235,7 @@ func (a *apiImpl) registerHandler(c *fiber.Ctx) {
 			"success": false,
 			"error":   err,
 		})
-		return
+		return err
 	}
 
 	fmt.Println(req)
@@ -243,4 +250,5 @@ func (a *apiImpl) registerHandler(c *fiber.Ctx) {
 		"success": true,
 		"userId":  userId,
 	})
+	return nil
 }

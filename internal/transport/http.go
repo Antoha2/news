@@ -18,6 +18,7 @@ type Service interface {
 type AuthService interface {
 	Login(ctx context.Context, email string, password string, appID int) (token string, err error)
 	RegisterNewUser(ctx context.Context, email string, password string) (userID int64, err error)
+	//ParseToken(token string) (int, error)
 }
 
 type apiImpl struct {

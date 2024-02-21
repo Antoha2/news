@@ -11,7 +11,7 @@ type Config struct {
 	Env         string `env:"ENV" env-default:"local"`
 	HTTP        HTTPConfig
 	DBConfig    DBConfig
-	TokenTTL    time.Duration `env:"TOKEN_TTL" env-default:"1h"`
+	TokenTTL    time.Duration `env:"TOKEN_TTL" env-default:"12h"`
 	TokenSecret string        `env:"TOKEN_SECRET" env-default:"antoha"`
 }
 
