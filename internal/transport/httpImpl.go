@@ -103,7 +103,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) error {
 		})
 		return err
 	}
-	news.Id = id
+
 	if err = requestValidation(news); err != nil {
 		log.Error("occurred error for edit News, ", sl.Err(err))
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -115,6 +115,7 @@ func (a *apiImpl) editNewsHandler(c *fiber.Ctx) error {
 
 	log.Info("run edit News", sl.Atr("News", news))
 
+	news.Id = id
 	news, err = a.service.EditNews(c.Context(), news)
 	if err != nil {
 		log.Error("occurred error for edit News, ", sl.Err(err))
@@ -141,6 +142,15 @@ func (a *apiImpl) addNewsHandler(c *fiber.Ctx) error {
 	news := &service.News{}
 	if err := c.BodyParser(&news); err != nil {
 		log.Error("cant unmarshall", sl.Err(err))
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   err,
+		})
+		return err
+	}
+
+	if err := requestValidation(news); err != nil {
+		log.Error("occurred error for edit News, ", sl.Err(err))
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"success": false,
 			"error":   err,
@@ -184,11 +194,9 @@ func requestValidation(n *service.News) error {
 	if len(n.Categories) > 10 {
 		vErr = append(vErr, "too much Categories")
 	}
-
 	if len(vErr) != 0 {
 		return errors.New(strings.Join(vErr, ", "))
 	}
-
 	return nil
 }
 
