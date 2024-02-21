@@ -10,13 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ContextKey string
-
-const (
-	authorizationHeader = "Authorization"
-	authErr             = "occurred error for Authorization user"
-)
-
 func (a *apiImpl) userIdentify(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -50,7 +43,6 @@ func (a *apiImpl) userIdentify(next http.Handler) http.Handler {
 		}
 
 		if userEmail == "" {
-
 			log.Error("no access", sl.Err(errors.New(authErr)))
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(authErr))

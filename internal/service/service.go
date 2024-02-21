@@ -29,8 +29,6 @@ type ServImpl struct {
 	rep *repository.RepImpl
 	cfg *config.Config
 	log *slog.Logger
-
-	//*repository.RepImpl
 }
 
 func NewServ(
@@ -50,16 +48,6 @@ type authServImpl struct {
 	cfg *config.Config
 	log *slog.Logger
 }
-
-// // Login implements transport.AuthService.
-// func (*authServImpl) Login(ctx context.Context, email string, password string, appID int) (token string, err error) {
-// 	panic("unimplemented")
-// }
-
-// // RegisterNewUser implements transport.AuthService.
-// func (*authServImpl) RegisterNewUser(ctx context.Context, email string, password string) (userID int64, err error) {
-// 	panic("unimplemented")
-// }
 
 func NewServAuth(
 	cfg *config.Config,
@@ -85,21 +73,13 @@ type SearchTerms struct {
 	Limit  int `json:"limit"`
 }
 
-// type regUser struct {
-// 	name  string `json:"name"`
-// 	email string `json:"email"`
-// }
-
 type LoginRequest struct {
-	Username string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 	Roles    []string
 }
 
 type RegisterRequest struct {
-	// FirstName string `json:"firstname"`
-	// LastName  string `json:"lastname"`
-	// Username  string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }

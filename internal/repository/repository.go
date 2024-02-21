@@ -20,9 +20,9 @@ func NewRep(log *slog.Logger, dbx *reform.DB) *RepImpl {
 }
 
 type RepNews struct {
-	Id         int    //`reform:"id,pk"`
-	Title      string //`reform:"citle"`
-	Content    string //`reform:"content"`
+	Id         int    `reform:"id,pk"`
+	Title      string `reform:"title"`
+	Content    string `reform:"content"`
 	Categories []int
 }
 

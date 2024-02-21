@@ -182,7 +182,7 @@ func requestValidation(n *service.News) error {
 		vErr = append(vErr, "long length Content")
 	}
 	if len(n.Categories) > 10 {
-		vErr = append(vErr, "too mush Categories")
+		vErr = append(vErr, "too much Categories")
 	}
 
 	if len(vErr) != 0 {
@@ -207,13 +207,23 @@ func (a *apiImpl) loginHandler(c *fiber.Ctx) error {
 			"success": false,
 			"error":   err,
 		})
-		return err
+		return errors.New(ERROR_LOGIN)
 	}
 
-	token, err := a.authService.Login(c.Context(), req.Username, req.Password, 0)
+	if !emailValidation(req.Email) {
+		log.Error("wrong email")
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   errors.New("wrong email"),
+		})
+		return errors.New(ERROR_EMAIL)
+	}
+
+	token, err := a.authService.Login(c.Context(), req.Email, req.Password, 0)
 	if err != nil {
 		a.log.Error("occurred error for Login user", sl.Err(err))
 		c.Status(http.StatusInternalServerError).JSON(&fiber.ErrInternalServerError)
+		return errors.New(ERROR_LOGIN)
 	}
 	c.JSON(&fiber.Map{
 		"success": true,
@@ -238,7 +248,14 @@ func (a *apiImpl) registerHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	fmt.Println(req)
+	if !emailValidation(req.Email) {
+		log.Error("wrong email")
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"success": false,
+			"error":   errors.New("wrong email"),
+		})
+		return errors.New(ERROR_EMAIL)
+	}
 
 	log.Info("run register user")
 	userId, err := a.authService.RegisterNewUser(c.Context(), req.Email, req.Password)
@@ -251,4 +268,12 @@ func (a *apiImpl) registerHandler(c *fiber.Ctx) error {
 		"userId":  userId,
 	})
 	return nil
+}
+
+//email Validation
+func emailValidation(email string) bool {
+
+	contain := strings.Contains(email, "@")
+
+	return contain
 }

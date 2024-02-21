@@ -19,13 +19,13 @@ func (s *authServImpl) RegisterNewUser(ctx context.Context, email string, pass s
 		slog.String("email", email),
 	)
 	log.Info("registring user")
-	// Генерируем хэш и соль для пароля.
+	// generate a hash and salt for the password
 	passHash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {
 		log.Error("failed to generate password hash", sl.Err(err))
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
-	// Сохраняем пользователя в БД
+	// Saving the user in the database
 	id, err := s.rep.UserSaver(ctx, email, passHash)
 	if err != nil {
 		log.Error("failed to save user", sl.Err(err))
@@ -44,7 +44,7 @@ func (s *authServImpl) Login(ctx context.Context, email string, password string,
 	)
 	log.Info("attempting to login user")
 
-	// Достаём пользователя из БД
+	// Getting the user from the database
 	user, err := s.rep.UserProvider(ctx, email)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
@@ -55,7 +55,7 @@ func (s *authServImpl) Login(ctx context.Context, email string, password string,
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Проверяем корректность полученного пароля
+	// Checking the correctness of the received password
 	if err := bcrypt.CompareHashAndPassword(user.PassHash, []byte(password)); err != nil {
 		s.log.Info("invalid credentials", sl.Err(err))
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
@@ -63,7 +63,7 @@ func (s *authServImpl) Login(ctx context.Context, email string, password string,
 
 	log.Info("user logged in successfully")
 
-	// Создаём токен авторизации
+	// Create an authorization token
 	token, err := jwt.NewToken(s.cfg, user)
 	if err != nil {
 		s.log.Error("failed to generate token", sl.Err(err))
@@ -71,22 +71,3 @@ func (s *authServImpl) Login(ctx context.Context, email string, password string,
 	}
 	return token, nil
 }
-
-// func (s *authServImpl) ParseToken(accesToken string) (int, error) {
-
-// 	token, err :=  jwt.ParseWithClaims(accesToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-// 			return nil, errors.New("неверный метод подписи")
-// 		}
-// 		return []byte(signingKey), nil
-// 	})
-// 	if err != nil {
-// 		return 0, nil
-// 	}
-
-// 	claims, ok := token.Claims.(*tokenClaims)
-// 	if !ok {
-// 		return 0, errors.New("token claims not of type *tokenClaims")
-// 	}
-// 	return claims.UserId, nil
-// }
