@@ -61,14 +61,14 @@ func (r *RepImpl) EditNews(ctx context.Context, news *RepNews) (*RepNews, error)
 			tx.Rollback()
 			return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 		}
-	} else {
-		query := "SELECT title, content FROM news WHERE id = $1"
-		row := tx.QueryRowContext(ctx, query, news.Id)
-		if err := row.Scan(&rNews.Title, &rNews.Content); err != nil {
-			tx.Rollback()
-			return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
+		// } else {
+		// 	query := "SELECT title, content FROM news WHERE id = $1"
+		// 	row := tx.QueryRowContext(ctx, query, news.Id)
+		// 	if err := row.Scan(&rNews.Title, &rNews.Content); err != nil {
+		// 		tx.Rollback()
+		// 		return nil, errors.Wrap(err, fmt.Sprintf("sql edit News failed, query: %s", query))
 
-		}
+		// 	}
 	}
 
 	if len(rNews.Categories) != 0 {
